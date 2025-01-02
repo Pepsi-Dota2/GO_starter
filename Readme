@@ -1,0 +1,19 @@
+Hello() //public Function
+hello() //private Function
+
+Go none Class  just have package and function
+1 function can have 1 package
+
+struct is important in go
+
+//interface implement with struct
+
+x = 10 
+&x // this is call address 
+
+*int // is pointer
+
+nil // is null in go 
+
+
+// nodemon --watch .  --exec go run main.go .--signal SIGTERM
