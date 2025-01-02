@@ -11,14 +11,12 @@ import (
 )
 
 func main() {
-	configDatabase := config.DBConfig{
-		Host:     "localhost",
-		Port:     5432,
-		User:     "myuser",
-		Password: "mypassword",
-		DBName:   "mydatabase",
-	}
 
+	configDatabase, err := config.LoadDBConfig()
+
+	if err != nil {
+		log.Fatalf("Error loading database configuration: %v\n", err)
+	}
 	db, err := config.NewDBConnection(
 		configDatabase,
 	)

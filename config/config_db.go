@@ -4,7 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
+	"strconv"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq" // PostgreSQL driver
 )
 
@@ -14,6 +17,30 @@ type DBConfig struct {
 	User     string
 	Password string
 	DBName   string
+}
+
+func LoadDBConfig() (DBConfig, error) {
+	err := godotenv.Load()
+
+	if err != nil {
+		return DBConfig{}, fmt.Errorf("error loading .env file: %w", err)
+	}
+
+	port, err := strconv.Atoi(os.Getenv("DB_PORT"))
+
+	if err != nil {
+		return DBConfig{}, fmt.Errorf("error parsing DB_PORT: %w", err)
+	}
+
+	dbCfg := DBConfig{
+		Host:     os.Getenv("DB_HOST"),
+		Port:     port,
+		User:     os.Getenv("DB_USER"),
+		Password: os.Getenv("DB_PASSWORD"),
+		DBName:   os.Getenv("DB_NAME"),
+	}
+
+	return dbCfg, nil
 }
 
 func NewDBConnection(cfg DBConfig) (*sql.DB, error) {
