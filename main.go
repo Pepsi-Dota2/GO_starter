@@ -4,9 +4,8 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
-	_ "github.com/lib/pq"
+	"github.com/pepsi/go-fiber/app/order_api/entities"
 	"github.com/pepsi/go-fiber/config"
-	"github.com/pepsi/go-fiber/entities"
 	routes "github.com/pepsi/go-fiber/router"
 )
 

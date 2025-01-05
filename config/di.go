@@ -1,8 +1,8 @@
 package config
 
 import (
-	"github.com/pepsi/go-fiber/adapters"
-	"github.com/pepsi/go-fiber/usecases"
+	"github.com/pepsi/go-fiber/app/order_api/adapters"
+	"github.com/pepsi/go-fiber/app/order_api/usecases"
 	"gorm.io/gorm"
 )
 

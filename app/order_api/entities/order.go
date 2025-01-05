@@ -1,6 +1,8 @@
 package entities
 
+import "gorm.io/gorm"
+
 type Order struct {
-	ID    uint
+	gorm.Model
 	Total float64
 }
