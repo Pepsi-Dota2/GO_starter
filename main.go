@@ -1,37 +1,27 @@
 package main
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 	_ "github.com/lib/pq"
 	"github.com/pepsi/go-fiber/config"
-	"github.com/pepsi/go-fiber/router"
-	"github.com/pepsi/go-fiber/service"
+	"github.com/pepsi/go-fiber/entities"
+	routes "github.com/pepsi/go-fiber/router"
 )
 
 func main() {
 
-	configDatabase, err := config.LoadDBConfig()
-
-	if err != nil {
-		log.Fatalf("Error loading database configuration: %v\n", err)
-	}
-	db, err := config.NewDBConnection(
-		configDatabase,
-	)
-
-	if err != nil {
-		log.Fatalf("Error initializing database connection: %v\n", err)
-	}
-
-	service.DB = db
-
-	defer service.DB.Close()
-
 	app := fiber.New()
+	db, err := config.InitDB()
+	if err != nil {
+		fmt.Printf("Error initializing database: %s\n", err)
+		return
+	}
 
-	router.SetupRoutes(app)
+	db.AutoMigrate(&entities.Order{})
+
+	routes.RegisterOrderRoutes(app, db)
 
 	app.Listen(":8080")
 

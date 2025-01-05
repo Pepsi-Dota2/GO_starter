@@ -1,65 +1,57 @@
 package config
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq" // PostgreSQL driver
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
-type DBConfig struct {
-	Host     string
-	Port     int
-	User     string
-	Password string
-	DBName   string
-}
-
-func LoadDBConfig() (DBConfig, error) {
-	err := godotenv.Load()
-
-	if err != nil {
-		return DBConfig{}, fmt.Errorf("error loading .env file: %w", err)
+func InitDB() (*gorm.DB, error) {
+	if err := godotenv.Load(); err != nil {
+		return nil, fmt.Errorf("error loading .env file: %w", err)
 	}
 
+	// Parse database configuration from environment variables
 	port, err := strconv.Atoi(os.Getenv("DB_PORT"))
-
 	if err != nil {
-		return DBConfig{}, fmt.Errorf("error parsing DB_PORT: %w", err)
+		return nil, fmt.Errorf("error parsing DB_PORT: %w", err)
 	}
 
-	dbCfg := DBConfig{
-		Host:     os.Getenv("DB_HOST"),
-		Port:     port,
-		User:     os.Getenv("DB_USER"),
-		Password: os.Getenv("DB_PASSWORD"),
-		DBName:   os.Getenv("DB_NAME"),
-	}
+	host := os.Getenv("DB_HOST")
+	user := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
 
-	return dbCfg, nil
-}
+	// Create the connection string
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		host, port, user, password, dbName)
 
-func NewDBConnection(cfg DBConfig) (*sql.DB, error) {
-	// Connection string
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DBName)
+	// Set up GORM logger
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		logger.Config{
+			SlowThreshold: time.Second, // Slow SQL threshold
+			LogLevel:      logger.Info, // Log level
+			Colorful:      true,        // Enable color
+		},
+	)
 
-	// Open a connection
-	db, err := sql.Open("postgres", psqlInfo)
+	// Open a database connection
+	db, err := gorm.Open(postgres.Open(psqlInfo), &gorm.Config{
+		Logger: newLogger,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
+		return nil, fmt.Errorf("failed to connect to the database: %w", err)
 	}
 
-	// Check the connection
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("failed to ping database: %w", err)
-	}
-
-	log.Println("Database connection established successfully")
+	fmt.Println("Connected to the database successfully")
 	return db, nil
 }

@@ -1,14 +1,13 @@
-package router
+package routes
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/pepsi/go-fiber/controller"
+	"github.com/pepsi/go-fiber/config"
+	"gorm.io/gorm"
 )
 
-func SetupRoutes(app *fiber.App) {
-	app.Get("/product/:id", controller.GetProductByIdHandler)
-	app.Post("/product/create", controller.CreateProductHandler)
-	app.Put("/product/update/:id", controller.UpdateProductHandler)
-	app.Delete("/product/delete/:id", controller.DeleteProductHandler)
-	app.Get("/products", controller.GetAllProductsHandler)
+func RegisterOrderRoutes(app *fiber.App, db *gorm.DB) {
+	orderHandler := config.SetupOrderDependencies(db)
+
+	app.Post("/orders", orderHandler.CreateOrder)
 }
