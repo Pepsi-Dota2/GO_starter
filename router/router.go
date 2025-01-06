@@ -12,4 +12,5 @@ func RegisterOrderRoutes(app *fiber.App, db *gorm.DB) {
 	app.Post("/orders", orderHandler.CreateOrder)
 	app.Put("/orders/:id", orderHandler.UpdateOrder)
 	app.Get("/orders", orderHandler.GetAllOrder)
+	app.Post("/orders/upload", orderHandler.UploadFile)
 }

@@ -34,3 +34,7 @@ func (r *GormOrderRepository) GetAll() ([]entities.Order, error) {
 	}
 	return orders, nil
 }
+
+func (r *GormOrderRepository) UploadFile(file entities.UploadFile) error {
+	return r.db.Create(&file).Error
+}

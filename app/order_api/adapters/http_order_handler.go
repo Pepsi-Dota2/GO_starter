@@ -70,3 +70,28 @@ func (h *HttpOrderHandler) GetAllOrder(c *fiber.Ctx) error {
 	}
 	return c.Status(fiber.StatusOK).JSON(orders)
 }
+
+func (h *HttpOrderHandler) UploadFile(c *fiber.Ctx) error {
+	file, err := c.FormFile("file")
+	if err != nil {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	err = c.SaveFile(file, "./uploads/"+file.Filename)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+	}
+
+	err = h.orderUsecase.UploadFile(entities.UploadFile{
+		File: file.Filename,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to upload file",
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "File uploaded successfully",
+		"file":    file.Filename,
+	})
+}

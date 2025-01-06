@@ -2,9 +2,7 @@ package entities
 
 import "gorm.io/gorm"
 
-type Order struct {
+type UploadFile struct {
 	gorm.Model
-	Total float64
+	File string
 }
-
-
