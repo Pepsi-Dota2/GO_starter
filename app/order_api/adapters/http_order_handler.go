@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/pepsi/go-fiber/app/order_api/entities"
 	"github.com/pepsi/go-fiber/app/order_api/usecases"
+	"gorm.io/gorm"
 )
 
 type HttpOrderHandler struct {
@@ -94,4 +95,28 @@ func (h *HttpOrderHandler) UploadFile(c *fiber.Ctx) error {
 		"message": "File uploaded successfully",
 		"file":    file.Filename,
 	})
+}
+
+func (h *HttpOrderHandler) GetOrderById(c *fiber.Ctx) error {
+	orderId, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid order ID",
+		})
+	}
+
+	// Retrieve the order by ID
+	order, err := h.orderUsecase.GetOrderById(uint(orderId))
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "Order not found",
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to retrieve order",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(order)
 }

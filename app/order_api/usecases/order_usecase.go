@@ -10,6 +10,7 @@ type OrderUsecase interface {
 	UpdateOrder(orderId uint, order entities.Order) error
 	GetAllOrder() ([]entities.Order, error)
 	UploadFile(file entities.UploadFile) error
+	GetOrderById(orderId uint) (*entities.Order, error)
 }
 type OrderService struct {
 	repo repository.OrderRepository
@@ -33,4 +34,8 @@ func (s *OrderService) GetAllOrder() ([]entities.Order, error) {
 
 func (s *OrderService) UploadFile(file entities.UploadFile) error {
 	return s.repo.UploadFile(file)
+}
+
+func (s *OrderService) GetOrderById(orderId uint) (*entities.Order, error) {
+	return s.repo.GetById(orderId)
 }
