@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/pepsi/go-fiber/app/order_api/entities"
+	entities_user "github.com/pepsi/go-fiber/app/user_api/entities"
 	"github.com/pepsi/go-fiber/config"
 	routes "github.com/pepsi/go-fiber/router"
 )
@@ -27,7 +28,7 @@ func main() {
 		return
 	}
 
-	db.AutoMigrate(&entities.Order{}, &entities.UploadFile{})
+	db.AutoMigrate(&entities.Order{}, &entities.UploadFile{}, &entities_user.User{})
 
 	routes.RegisterOrderRoutes(app, db)
 

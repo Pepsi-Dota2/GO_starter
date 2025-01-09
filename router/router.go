@@ -14,4 +14,14 @@ func RegisterOrderRoutes(app *fiber.App, db *gorm.DB) {
 	app.Get("/orders", orderHandler.GetAllOrder)
 	app.Post("/orders/upload", orderHandler.UploadFile)
 	app.Get("/orders/:id", orderHandler.GetOrderById)
+
+	//user login
+	userHandler := config.SetupUserDependencies(db)
+
+	app.Post("/user/register", userHandler.CreateUserRegister)
+	app.Post("/user/login", userHandler.UserLogin)
+	app.Get("/user", userHandler.GetALlUser)
+	app.Get("/user/:id", userHandler.GetUserById)
+	app.Put("/user/update/:id", userHandler.UpdateUser)
+
 }
