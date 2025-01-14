@@ -59,8 +59,13 @@ func (r *GormUserRepositoryImpl) Delete(id uint) error {
 func (r *GormUserRepositoryImpl) UserLogin(user *entities_user.User) (*entities_user.User, error) {
 	var foundUser entities_user.User
 
-	if err := r.db.Where("email = ? OR password = ?", user.Email, user.Password).First(&foundUser).Error; err != nil {
-		return nil, err
+	// Use AND to check both username AND password match
+	result := r.db.Where("username = ? AND password = ?", user.Username, user.Password).First(&foundUser)
+	if result.Error != nil {
+		log.Printf("Login error: %v", result.Error)
+		log.Printf("Attempted username: %s", user.Username)
+		return nil, result.Error
 	}
+
 	return &foundUser, nil
 }

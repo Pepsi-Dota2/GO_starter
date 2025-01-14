@@ -2,6 +2,7 @@ package data
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	entities_user "github.com/pepsi/go-fiber/app/user_api/entities"
@@ -50,14 +51,13 @@ func (h *HttpUserHandler) CreateUserRegister(c *fiber.Ctx) error {
 func (h *HttpUserHandler) UserLogin(c *fiber.Ctx) error {
 	var userReq entities_user.User
 
-	// Parse the request body
 	if err := c.BodyParser(&userReq); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
 	}
 
-	// Get the user from the database
+	// Get the user from the database by username
 	user, err := h.usecase.LoginUser(&userReq)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -65,22 +65,13 @@ func (h *HttpUserHandler) UserLogin(c *fiber.Ctx) error {
 		})
 	}
 
-	// Check if the password is correct
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userReq.Password))
-	if err != nil {
+	// Compare username and password
+	if userReq.Username != user.Username || userReq.Password != user.Password {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Invalid credentials",
+			"error": "Username or password is incorrect",
 		})
 	}
 
-	// Compare the hashed password (assuming password is hashed in database)
-	if userReq.Email != user.Email || userReq.Password != user.Password {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Email or password is invalid",
-		})
-	}
-
-	// Generate the JWT token
 	tokenString, err := utils.GenerateJWT(user.ID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -88,11 +79,20 @@ func (h *HttpUserHandler) UserLogin(c *fiber.Ctx) error {
 		})
 	}
 
-	// Set the token in the user object
+	// Set cookie
+	cookie := new(fiber.Cookie)
+	cookie.Name = "token"
+	cookie.Value = tokenString
+	cookie.Expires = time.Now().Add(24 * time.Hour) // Cookie expires in 24 hours
+	cookie.HTTPOnly = true                          // Protect against XSS
+	cookie.Secure = true                            // Only send over HTTPS
+	cookie.Path = "/"
+
+	c.Cookie(cookie)
 	user.Token = tokenString
 
-	// Return the user and token
 	return c.Status(fiber.StatusOK).JSON(user)
+
 }
 
 func (h *HttpUserHandler) GetALlUser(c *fiber.Ctx) error {
@@ -142,4 +142,35 @@ func (h *HttpUserHandler) UpdateUser(c *fiber.Ctx) error {
 		})
 	}
 	return c.Status(fiber.StatusOK).JSON(updatedUser)
+}
+
+func (h *HttpUserHandler) DeleteUser(c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid user ID",
+		})
+	}
+	err = h.usecase.DeleteUser(uint(id))
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to delete user",
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "User deleted successfully",
+	})
+}
+
+func (h *HttpUserHandler) LogoutUser(c *fiber.Ctx) error {
+	cookie := new(fiber.Cookie)
+	cookie.Name = "token"
+	cookie.Value = ""
+	cookie.Expires = time.Now().Add(-time.Hour) // Set expiration in the past
+	cookie.HTTPOnly = true
+	cookie.Secure = true
+	cookie.Path = "/"
+
+	c.Cookie(cookie)
+	return c.SendStatus(fiber.StatusOK)
 }
